@@ -13,6 +13,8 @@ library("DESeq2")
 # The reference (control) in this example is “NC”.
 coldata$condition = factor(coldata$condition)
 
+# Make a DESeqDataSet object and look at it. 
+# It will hold the count information for each gene for each sample.
 dds=DESeqDataSetFromMatrix(countData = readcounts, colData = coldata, design = ~ condition)
 dds
 
@@ -35,3 +37,27 @@ dds = DESeq(dds)
 result = results(dds)
 result
 mcols(result)$description
+
+# To reduce some noise, you can shrink the results. 
+resultLFC = lfcShrink(dds, coef="condition_LPS_vs_NC", type="normal")
+resultLFC
+summary(result)
+
+# count how many genes have an adjusted p-value of smaller than 0.1 or 0.05, respectively.
+resultOrdered = result[order(result$pvalue),]
+sum(result$padj < 0.1, na.rm=TRUE) # [1] 1607
+sum(result$padj < 0.05, na.rm=TRUE) # [1] 1295
+
+# Filtering of genes with False Discovery Rate (FDR) smaller than 0.05 and assigning them to a new object:
+result005 = results(dds, alpha=0.05)
+summary(result005)
+
+plotMA(result, ylim=c(-2,2))
+# When the shrunken results are plotted with plotMA(), 
+# you can see that the noise from lowly expressed genes is reduced.
+plotMA(resultLFC, ylim=c(-2,2))
+
+# we can plot the gene with the lowest adjusted p-value. 
+# In this plot, counts are normalized by sequencing depth and a pseudocount 
+# of 1/2 is added to allow for log scale plotting.
+plotCounts(dds, gene=which.min(result$padj), intgroup="condition")
