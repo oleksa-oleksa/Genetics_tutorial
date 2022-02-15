@@ -244,3 +244,9 @@ hist(network_NC$wTO)
 
 #####################################
 # Comparing networks with CoDiNA
+network_NC$Node.1 = as.character(network_NC$Node.1)
+network_NC$Node.2 = as.character(network_NC$Node.2)
+require(CoDiNA)
+
+Diff_LPS_NC = MakeDiffNet(Data = list(network_NC, network_LPS),
+                          Code = c('NC', 'LPS'))
