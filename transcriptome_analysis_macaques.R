@@ -179,3 +179,9 @@ require(plyr)
 
 LPS$ensembl_gene_id = row.names(LPS)
 LPS = join(LPS, GeneSymbols, type = 'inner', match = 'first') 
+
+head(LPS)
+# Removing duplicates:
+LPS = LPS[!duplicated(LPS$external_gene_name), ]
+row.names(LPS) = LPS$external_gene_name
+head(LPS)
