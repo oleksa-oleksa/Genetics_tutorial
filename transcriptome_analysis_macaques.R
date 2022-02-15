@@ -185,3 +185,20 @@ head(LPS)
 LPS = LPS[!duplicated(LPS$external_gene_name), ]
 row.names(LPS) = LPS$external_gene_name
 head(LPS)
+
+ncol(LPS)
+names(LPS)
+
+# Removing first column with Ensembl IDs and last column with GeneSymbols:
+LPS = LPS[, -c(1,27)]
+head(LPS)
+
+# Performing the same annotation and reformatting for the NC table:
+NC$ensembl_gene_id = row.names(NC)
+NC = join(NC, GeneSymbols, type = 'inner', match = 'first')
+
+NC = NC[!duplicated(NC$external_gene_name), ]
+row.names(NC) = NC$external_gene_name
+head(NC)
+
+names(NC)
