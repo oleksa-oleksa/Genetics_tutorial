@@ -202,3 +202,45 @@ row.names(NC) = NC$external_gene_name
 head(NC)
 
 names(NC)
+NC = NC[, -c(1,27)]
+head(NC)
+
+#########################
+# Constructing the networks
+# TFs will be the nodes, correlations will be calculated for all TFs with all expressed genes. 
+# The output, network_NC, will be an object with information on nodes, 
+# signed and absolute wTO values and p-values.
+network_NC = wTO.Complete(n = 10, k = 5,  Data = NC, 
+                          method_resampling = 'Bootstrap', 
+                          Overlap = TFs, method = 's', plot = F) 
+
+network_NC
+
+# Selecting the table with the information on nodes, wTO and p-values:
+network_NC = network_NC$wTO
+head(network_NC)
+
+# If the weight of the link is insignificant (i.e. it probably just exists by chance), set wTO to zero.
+network_NC$wTO = ifelse(network_NC$Padj_sig<0.05, network_NC$wTO_sign, 0 )
+head(network_NC)
+
+# From the output table, remove everything but the info on nodes and the wTO between two nodes.
+network_NC = network_NC[,c(1:2,9)] %>% as.data.frame()
+head(network_NC)
+
+# Second, constructing the LPS network accordingly
+network_LPS = wTO.Complete(n = 10, k = 5,  Data = LPS, 
+                           method_resampling = 'Bootstrap', 
+                           Overlap = TFs, method = 's', plot = F) 
+
+network_LPS =network_LPS$wTO
+network_LPS$wTO = ifelse(network_LPS$Padj_sig <0.05, network_LPS$wTO_sign, 0 )
+
+network_LPS = network_LPS[,c(1,2,9)] %>% as.data.frame()
+
+head(network_LPS)
+
+hist(network_NC$wTO)
+
+#####################################
+# Comparing networks with CoDiNA
