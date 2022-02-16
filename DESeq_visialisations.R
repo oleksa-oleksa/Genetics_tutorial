@@ -110,10 +110,27 @@ ggplot(d, aes(x=condition, y=count)) +
   geom_point(position=position_jitter(w=0.1,h=0)) + 
   scale_y_log10(breaks=c(25,100,400))
 
-#####
-# this gives log2(n + 1)
+
+####
 ntd <- normTransform(dds)
 library("vsn")
 meanSdPlot(assay(ntd))
 
+# These transformation functions return an object of class DESeqTransform which is 
+# a subclass of RangedSummarizedExperiment. 
+vsd <- vst(dds, blind=FALSE)
+rld <- rlog(dds, blind=FALSE)
+head(assay(vsd), 3)
+
+#####
+library("pheatmap")
+colData(dds)
+select <- order(rowMeans(counts(dds,normalized=TRUE)),
+                decreasing=TRUE)[1:20]
+df <- as.data.frame(colData(dds)["condition"])
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df)
+##
+pheatmap(assay(vsd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df)
 
