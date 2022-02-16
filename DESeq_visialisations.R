@@ -122,6 +122,9 @@ vsd <- vst(dds, blind=FALSE)
 rld <- rlog(dds, blind=FALSE)
 head(assay(vsd), 3)
 
+meanSdPlot(assay(vsd))
+
+
 #####
 library("pheatmap")
 colData(dds)
@@ -134,3 +137,20 @@ pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
 pheatmap(assay(vsd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
          cluster_cols=FALSE, annotation_col=df)
 
+####
+# Sample clustering:  the dist function applied to the transpose 
+# of the transformed count matrix to get sample-to-sample distances.
+library("RColorBrewer")
+sampleDists <- dist(t(assay(vsd)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(vsd$condition, vsd$type, sep="-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+# A heatmap of this distance matrix gives us an overview over similarities and dissimilarities 
+# between samples. We have to provide a hierarchical clustering hc to the heatmap function 
+# based on the sample distances, or else the heatmap function would calculate a clustering 
+# based on the distances between the rows/columns of the distance matrix.
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
