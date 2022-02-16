@@ -1,3 +1,9 @@
+# Task: DESeq Visualisations
+# We start with data loading and preparations
+# as it was done in provided tutorial
+
+# Vusialisations can be found after data loading part
+
 readcounts=read.table("Tutorial_macaques_readcounts.txt", header=TRUE, row.names=1, sep="\t", stringsAsFactors=FALSE)
 dim(readcounts)
 head(readcounts)
@@ -52,6 +58,10 @@ sum(result$padj < 0.05, na.rm=TRUE) # [1] 1295
 result005 = results(dds, alpha=0.05)
 summary(result005)
 
+# About MA Plot: In DESeq2, the function plotMA shows the log2 fold changes attributable 
+# to a given variable over the mean of normalized counts for all the samples in the DESeqDataSet. 
+# Points will be colored red if the adjusted p value is less than 0.1. 
+# Points which fall out of the window are plotted as open triangles pointing either up or down.
 plotMA(result, ylim=c(-2,2))
 # When the shrunken results are plotted with plotMA(), 
 # you can see that the noise from lowly expressed genes is reduced.
@@ -61,3 +71,49 @@ plotMA(resultLFC, ylim=c(-2,2))
 # In this plot, counts are normalized by sequencing depth and a pseudocount 
 # of 1/2 is added to allow for log scale plotting.
 plotCounts(dds, gene=which.min(result$padj), intgroup="condition")
+
+###### 
+# Visualisations
+
+# The function plotDispEsts visualizes DESeq2’s dispersion estimates
+# The black points are the dispersion estimates for each gene as obtained 
+# by considering the informationfrom each gene separately.  
+# Unless one has many samples,  these values fluctuate strongly around their true values.
+plotDispEsts(dds, ylim = c(1e-6, 1e1))
+
+# Histogram of the pvalues returned by the test for differential expression
+hist(resultLFC$pvalue, breaks=20, col="orange" )
+
+hist(result$padj, breaks=40, col="violet" )
+
+###########
+
+# because we are interested in treated vs untreated, we set 'coef=2'
+resNorm <- lfcShrink(dds, coef=2, type="normal")
+resAsh <- lfcShrink(dds, coef=2, type="ashr")
+par(mfrow=c(1,3), mar=c(4,4,2,1))
+xlim <- c(1,1e5); ylim <- c(-3,3)
+plotMA(resultLFC, xlim=xlim, ylim=ylim, main="apeglm")
+plotMA(resNorm, xlim=xlim, ylim=ylim, main="normal")
+plotMA(resAsh, xlim=xlim, ylim=ylim, main="ashr")
+
+#####
+# examine the counts of reads for a single gene across the groups. 
+# A simple function for making this plot is plotCounts, 
+# which normalizes counts by the estimated size factors 
+# (or normalization factors if these were used) and adds a pseudocount of 1/2 
+# to allow for log scale plotting.
+d <- plotCounts(dds, gene=which.min(result$padj), intgroup="condition", 
+                returnData=TRUE)
+library("ggplot2")
+ggplot(d, aes(x=condition, y=count)) + 
+  geom_point(position=position_jitter(w=0.1,h=0)) + 
+  scale_y_log10(breaks=c(25,100,400))
+
+#####
+# this gives log2(n + 1)
+ntd <- normTransform(dds)
+library("vsn")
+meanSdPlot(assay(ntd))
+
+
